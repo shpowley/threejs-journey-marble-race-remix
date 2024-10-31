@@ -1,0 +1,94 @@
+* {
+  /* PREVENT TEXT SELECTION */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+html,
+body,
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: ivory;
+}
+
+.interface {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* DE-ACTIVATE MOUSE EVENTS (HTML TEXT CAN'T BE SELECTED, RIGHT-CLICK OPTIONS, ETC.) */
+  pointer-events: none;
+
+  font-family: 'Bebas Neue', cursive;
+}
+
+/* GAME TIMER */
+.time {
+  position: absolute;
+  top: 15%;
+  left: 0;
+  width: 100%;
+  color: #fff;
+  font-size: 6vh;
+  background: #00000033;
+  padding-top: 5px;
+  text-align: center;
+}
+
+/* RESTART "BUTTON" */
+.restart {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  top: 40%;
+  left: 0;
+  width: 100%;
+  color: #fff;
+  font-size: 80px;
+  background: #00000033;
+  padding-top: 10px;
+  text-align: center;
+
+  /* RE-ACTIVATE MOUSE EVENTS ON THIS ELEMENT (OVERRIDING THE PARENT) */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* KEYBOARD CONTROLS */
+.controls {
+  position: absolute;
+  bottom: 10%;
+  left: 0;
+  width: 100%;
+}
+
+.controls .raw {
+  display: flex;
+  justify-content: center;
+}
+
+.controls .key {
+  width: 40px;
+  height: 40px;
+  margin: 4px;
+  border: 2px solid #ffffff;
+  background: #ffffff44;
+}
+
+.controls .key.large {
+  width: 144px;
+}
+
+/* ACTIVE KEY - MAKES ICON STAND OUT */
+.controls .key.active {
+  background: #ffffff99;
+}
