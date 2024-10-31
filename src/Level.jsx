@@ -35,7 +35,7 @@ const BlockStart = ({ position = [0, 0, 0] }) => {
         maxWidth={0.25}
         lineHeight={0.75}
         textAlign='right'
-        position={[0.75, 0.7, 0]}
+        position={[0.5, 0.9, 0]}
         rotation-y={-0.25}
       >
         <meshBasicMaterial toneMapped={false} />

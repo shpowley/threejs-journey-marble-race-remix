@@ -36,6 +36,8 @@ export default {
   build: {
     outDir: '../dist', // Output in the dist/ folder
     emptyOutDir: true, // Empty the folder first
-    sourcemap: true // Add sourcemap
+    sourcemap: false, // Add sourcemap
+    minify: true, // Minify code
+    target: 'esnext' // use ESnext
   }
 }

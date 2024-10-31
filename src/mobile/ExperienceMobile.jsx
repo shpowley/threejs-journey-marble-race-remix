@@ -1,11 +1,11 @@
 import { Physics } from '@react-three/rapier'
 
-import Lights from './Lights.jsx'
-import { Level } from './Level.jsx'
-import { Player } from './Player.jsx'
-import { useGame } from './stores/useGame.js'
+import Lights from '../Lights.jsx'
+import { Level } from '../Level.jsx'
+import { PlayerMobile } from './PlayerMobile.jsx'
+import { useGame } from '../stores/useGame.js'
 
-export default function Experience() {
+export default function ExperienceMobile() {
   const
     block_count = useGame(state => state.block_count),
     block_seed = useGame(state => state.block_seed)
@@ -24,7 +24,7 @@ export default function Experience() {
         seed={block_seed}
       />
 
-      <Player />
+      <PlayerMobile />
     </Physics>
   </>
 }

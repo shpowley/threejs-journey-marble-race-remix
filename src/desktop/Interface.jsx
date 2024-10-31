@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { addEffect } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 
-import { useGame, GAME_STATES } from './stores/useGame.js'
+import { useGame, GAME_STATES } from '../stores/useGame.js'
 
 const Interface = () => {
   const ref_time = useRef()

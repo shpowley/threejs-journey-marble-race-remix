@@ -2,19 +2,72 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, useRapier } from '@react-three/rapier'
-import { useKeyboardControls } from '@react-three/drei'
 
-import { useGame, GAME_STATES } from './stores/useGame.js'
+import { useGame, GAME_STATES } from '../stores/useGame.js'
+import { useControls } from '../stores/useControls.js'
+
+const
+  PLAYER_POSITION_OFFSET_CONSTANTS = {
+    PORTRAIT: {
+      x: 0,
+      y: 0.65,
+      z: 3.1
+    },
+
+    LANDSCAPE: {
+      x: 0,
+      y: 0.65,
+      z: 2.1
+    }
+  },
+
+  TARGET_OFFSET_CONSTANTS = {
+    PORTRAIT: {
+      x: 0,
+      y: 0.25,
+      z: 0
+    },
+
+    LANDSCAPE: {
+      x: 0,
+      y: 0.35,
+      z: 0
+    }
+  },
+
+  PLAYER_OFFSET = {
+    x: 0,
+    y: 0,
+    z: 0
+  },
+
+  TARGET_OFFSET = {
+    x: 0,
+    y: 0,
+    z: 0
+  }
 
 const helper_vec3 = new THREE.Vector3()
 
-const Player = () => {
+const orientationChange = () => {
+  if (['portrait-primary', 'portrait-secondary'].includes(screen.orientation.type)) {
+    PLAYER_OFFSET.y = PLAYER_POSITION_OFFSET_CONSTANTS.PORTRAIT.y
+    PLAYER_OFFSET.z = PLAYER_POSITION_OFFSET_CONSTANTS.PORTRAIT.z
+    TARGET_OFFSET.y = TARGET_OFFSET_CONSTANTS.PORTRAIT.y
+  }
+  else {
+    PLAYER_OFFSET.y = PLAYER_POSITION_OFFSET_CONSTANTS.LANDSCAPE.y
+    PLAYER_OFFSET.z = PLAYER_POSITION_OFFSET_CONSTANTS.LANDSCAPE.z
+    TARGET_OFFSET.y = TARGET_OFFSET_CONSTANTS.LANDSCAPE.y
+  }
+}
+
+const PlayerMobile = () => {
   const ref_player = useRef()
 
   const [smoothed_camera_position] = useState(() => new THREE.Vector3(10, 10, 10))
   const [smoothed_camera_target] = useState(() => new THREE.Vector3())
 
-  const [subscribeKeys, getKeys] = useKeyboardControls()
   const { rapier, world } = useRapier()
 
   const
@@ -45,7 +98,7 @@ const Player = () => {
   useEffect(() => {
     // SUBSCRIBE TO THE JUMP KEY
     // - HANDLED HERE, INSTEAD OF useFrame(), OTHERWISE "IMPULSE" WOULD BE CALLED EVERY FRAME
-    const cleanupSubscribeJump = subscribeKeys(
+    const cleanupSubscribeJump = useControls.subscribe(
       state => state.jump,
 
       pressed => {
@@ -56,7 +109,7 @@ const Player = () => {
     )
 
     // SUBSCRIBE TO ANY KEY TO START GAME
-    const cleanupSubscribeAnyKey = subscribeKeys(() => startGame())
+    const cleanupSubscribeAnyKey = useControls.subscribe(() => startGame())
 
     // SUBSCRIBE TO GAME PHASES
     const cleanupSubscribeGameState = useGame.subscribe(
@@ -69,11 +122,16 @@ const Player = () => {
       }
     )
 
+    // ORIENTATION CHANGE LISTENER TO REPOSITION PLAYER CAMERA
+    screen.orientation.addEventListener('change', orientationChange)
+    orientationChange()
+
     // CLEANUP - HELPS WITH HOT RELOADING
     return () => {
       cleanupSubscribeJump()
       cleanupSubscribeAnyKey()
       cleanupSubscribeGameState()
+      screen.orientation.removeEventListener('change', orientationChange)
     }
   }, [])
 
@@ -83,7 +141,7 @@ const Player = () => {
     }
 
     // MOVE BALL | ROLL: applyTorqueImpulse | PUSH: applyImpulse
-    const keys = getKeys()
+    const { controller_x, controller_y } = useControls.getState()
 
     const
       impulse = { x: 0, y: 0, z: 0 },
@@ -91,24 +149,14 @@ const Player = () => {
       impulse_strength = 0.6 * delta,
       torque_strength = 0.2 * delta
 
-    if (keys.forward) {
-      impulse.z -= impulse_strength
-      torque.x -= torque_strength
+    if (controller_x) {
+      impulse.x += impulse_strength * controller_x
+      torque.z -= torque_strength * controller_x
     }
 
-    if (keys.backward) {
-      impulse.z += impulse_strength
-      torque.x += torque_strength
-    }
-
-    if (keys.left) {
-      impulse.x -= impulse_strength
-      torque.z += torque_strength
-    }
-
-    if (keys.right) {
-      impulse.x += impulse_strength
-      torque.z -= torque_strength
+    if (controller_y) {
+      impulse.z -= impulse_strength * controller_y
+      torque.x -= torque_strength * controller_y
     }
 
     ref_player.current.applyImpulse(impulse) // ALLOWS SLIGHT MOVEMENT WHILE IN THE AIR (NOTICEABLE IN MANY GAMES)
@@ -117,11 +165,11 @@ const Player = () => {
     // CAMERA AND CAMERA TARGET
     const position_player = ref_player.current.translation()
 
-    helper_vec3.set(position_player.x, position_player.y + 0.65, position_player.z + 2.25)
+    helper_vec3.set(position_player.x, position_player.y + PLAYER_OFFSET.y, position_player.z + PLAYER_OFFSET.z)
     smoothed_camera_position.lerp(helper_vec3, 5 * delta)
     state.camera.position.copy(smoothed_camera_position)
 
-    helper_vec3.set(position_player.x, position_player.y + 0.25, position_player.z)
+    helper_vec3.set(position_player.x, position_player.y + TARGET_OFFSET.y, position_player.z)
     smoothed_camera_target.lerp(helper_vec3, 5 * delta)
     state.camera.lookAt(smoothed_camera_target)
 
@@ -130,8 +178,8 @@ const Player = () => {
       endGame()
     }
 
-    // GAME PHASE - FALLEN OFF THE MAZE
-    if (position_player.y < -4) {
+    // GAME PHASE - FALLEN OFF THE MAZE OR "EXPLODED" OFF PLATFORM
+    if (position_player.y < -4 || position_player > 10) {
       restartGame()
     }
   })
@@ -157,4 +205,4 @@ const Player = () => {
   </RigidBody>
 }
 
-export { Player }
+export { PlayerMobile }
