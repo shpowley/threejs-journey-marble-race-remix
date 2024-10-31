@@ -44,7 +44,7 @@ const Interface = () => {
     }
   }, [])
 
-  return <div className='interface'>
+  return <div id='interface'>
 
     {/* GAME TIMER */}
     <div

@@ -7,8 +7,11 @@ import { useControls } from '../stores/useControls.js'
 
 import SVG_FULLSCREEN from '/fullscreen.svg'
 import SVG_FULLSCREEN_EXIT from '/fullscreen_exit.svg'
+import SVG_XR_MODE from '/ar_view.svg'
 
-const InterfaceMobile = () => {
+const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
+  const xr_mode = store ? store.getState().visibilityState : null
+
   const
     ref_time = useRef(),
     ref_fullscreen = useRef()
@@ -46,7 +49,11 @@ const InterfaceMobile = () => {
         ref_fullscreen.current.src = SVG_FULLSCREEN_EXIT
         document.documentElement.requestFullscreen()
       }
-    }, [])
+    }, []),
+
+    xrModeToggle = () => xr_mode
+      ? store.getState().session.end()
+      : store.enterAR()
 
   // UPDATE GAME TIMER
   useEffect(() => {
@@ -79,12 +86,23 @@ const InterfaceMobile = () => {
     }
   }, [])
 
-  return <div className='interface'>
+  return <div id='interface' >
 
     {/* QUICK SETTINGS */}
     <div id='quick-settings'>
       {
-        document.fullscreenEnabled &&
+        navigator?.xr.isSessionSupported('immersive-ar') &&
+        <div id='xr_mode'>
+          <img
+            src={SVG_XR_MODE}
+            className='animate-scale'
+            onClick={xrModeToggle}
+          />
+        </div>
+      }
+
+      {
+        document.fullscreenEnabled && !xr_overlay &&
         <div id='fullscreen'>
           <img
             ref={ref_fullscreen}

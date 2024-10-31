@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { transformWithEsbuild } from 'vite'
 import restart from 'vite-plugin-restart'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 export default {
   root: 'src/',
@@ -8,7 +9,10 @@ export default {
   base: './',
 
   plugins: [
+    // Restart server on static/public file change
     restart({ restart: ['../public/**',] }),
+
+    basicSsl(),
 
     // React support
     react(),

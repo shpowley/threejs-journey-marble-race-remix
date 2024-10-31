@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
+import { useXRSessionVisibilityState } from '@react-three/xr'
 import { RigidBody, useRapier } from '@react-three/rapier'
 
 import { useGame, GAME_STATES } from '../stores/useGame.js'
@@ -65,7 +66,9 @@ const orientationChange = () => {
 const PlayerMobile = () => {
   const ref_player = useRef()
 
-  const [smoothed_camera_position] = useState(() => new THREE.Vector3(10, 10, 10))
+  const xr_mode = useXRSessionVisibilityState()
+
+  const [smoothed_camera_position] = useState(() => new THREE.Vector3(0, 10, 10))
   const [smoothed_camera_target] = useState(() => new THREE.Vector3())
 
   const { rapier, world } = useRapier()
@@ -165,13 +168,15 @@ const PlayerMobile = () => {
     // CAMERA AND CAMERA TARGET
     const position_player = ref_player.current.translation()
 
-    helper_vec3.set(position_player.x, position_player.y + PLAYER_OFFSET.y, position_player.z + PLAYER_OFFSET.z)
-    smoothed_camera_position.lerp(helper_vec3, 5 * delta)
-    state.camera.position.copy(smoothed_camera_position)
+    if (!xr_mode) {
+      helper_vec3.set(position_player.x, position_player.y + PLAYER_OFFSET.y, position_player.z + PLAYER_OFFSET.z)
+      smoothed_camera_position.lerp(helper_vec3, 5 * delta)
+      state.camera.position.copy(smoothed_camera_position)
 
-    helper_vec3.set(position_player.x, position_player.y + TARGET_OFFSET.y, position_player.z)
-    smoothed_camera_target.lerp(helper_vec3, 5 * delta)
-    state.camera.lookAt(smoothed_camera_target)
+      helper_vec3.set(position_player.x, position_player.y + TARGET_OFFSET.y, position_player.z)
+      smoothed_camera_target.lerp(helper_vec3, 5 * delta)
+      state.camera.lookAt(smoothed_camera_target)
+    }
 
     // GAME PHASE - END OF THE MAZE
     if (position_player.z < -(block_count * 4 + 2)) {
