@@ -130,8 +130,8 @@ const Player = () => {
       endGame()
     }
 
-    // GAME PHASE - FALLEN OFF THE MAZE
-    if (position_player.y < -4) {
+    // GAME PHASE - FALLEN OFF THE MAZE OR "EXPLODED" OFF PLATFORM
+    else if (position_player.y < -4 || position_player.y > 10) {
       restartGame()
     }
   })

@@ -1,8 +1,8 @@
 import { Canvas } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 
-import Experience from './Experience.jsx'
-import Interface from './Interface.jsx'
+import { Experience } from './Experience.jsx'
+import { Interface } from './Interface.jsx'
 
 const RenderViewDesktop = () => {
   return <KeyboardControls

@@ -4,9 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { Float, Text, useGLTF } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 
-const
-  FONT_BEBAS_NEUE = './bebas-neue-v9-latin-regular.woff',
-  MODEL_HAMBURGER = './hamburger.glb'
+import { RESOURCE } from './common/Constants'
 
 const helper_vec3 = new THREE.Vector3()
 
@@ -30,7 +28,7 @@ const BlockStart = ({ position = [0, 0, 0] }) => {
       rotationIntensity={0.25}
     >
       <Text
-        font={FONT_BEBAS_NEUE}
+        font={RESOURCE.FONT_BEBAS_NEUE}
         scale={0.5}
         maxWidth={0.25}
         lineHeight={0.75}
@@ -55,7 +53,7 @@ const BlockStart = ({ position = [0, 0, 0] }) => {
 
 // END BLOCK : FINISH LINE TEXT + FLOOR + 3D HAMBURGER 'GOAL'
 const BlockEnd = ({ position = [0, 0, 0] }) => {
-  const hamburger = useGLTF(MODEL_HAMBURGER)
+  const hamburger = useGLTF(RESOURCE.MODEL_HAMBURGER)
 
   hamburger.scene.children.forEach(child => {
     if (child.isMesh) {
@@ -65,7 +63,7 @@ const BlockEnd = ({ position = [0, 0, 0] }) => {
 
   return <group position={position}>
     <Text
-      font={FONT_BEBAS_NEUE}
+      font={RESOURCE.FONT_BEBAS_NEUE}
       scale={1}
       position={[0, 2.25, 2]}
     >

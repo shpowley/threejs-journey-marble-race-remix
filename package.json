@@ -17,10 +17,10 @@
     "vite-plugin-restart": "^0.4.1"
   },
   "dependencies": {
-    "@react-three/drei": "^9.114.0",
+    "@react-three/drei": "^9.114.1",
     "@react-three/fiber": "^8.17.9",
-    "@react-three/rapier": "^1.4.0",
-    "@react-three/xr": "^6.2.12",
+    "@react-three/rapier": "^1.5.0",
+    "@react-three/xr": "^6.2.13",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

@@ -5,8 +5,8 @@ import {
   IfInSessionMode
 } from '@react-three/xr'
 
-import ExperienceMobile from './ExperienceMobile.jsx'
-import InterfaceMobile from './InterfaceMobile.jsx'
+import { ExperienceMobile } from './ExperienceMobile.jsx'
+import { InterfaceMobile } from './InterfaceMobile.jsx'
 
 const xr_store = createXRStore({
   handTracking: false,

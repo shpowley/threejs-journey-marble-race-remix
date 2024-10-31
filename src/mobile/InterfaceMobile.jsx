@@ -4,10 +4,7 @@ import { Joystick } from 'react-joystick-component'
 
 import { useGame, GAME_STATES } from '../stores/useGame.js'
 import { useControls } from '../stores/useControls.js'
-
-import SVG_FULLSCREEN from '/fullscreen.svg'
-import SVG_FULLSCREEN_EXIT from '/fullscreen_exit.svg'
-import SVG_XR_MODE from '/ar_view.svg'
+import { RESOURCE } from '../common/Constants.js'
 
 const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
   const xr_mode = store ? store.getState().visibilityState : null
@@ -42,11 +39,11 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
 
     fullscreenToggle = useCallback(() => {
       if (document.fullscreenElement) {
-        ref_fullscreen.current.src = SVG_FULLSCREEN
+        ref_fullscreen.current.src = RESOURCE.ICON_FULLSCREEN
         document.exitFullscreen()
       }
       else {
-        ref_fullscreen.current.src = SVG_FULLSCREEN_EXIT
+        ref_fullscreen.current.src = RESOURCE.ICON_FULLSCREEN_EXIT
         document.documentElement.requestFullscreen()
       }
     }, []),
@@ -94,7 +91,7 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
         navigator?.xr.isSessionSupported('immersive-ar') &&
         <div id='xr_mode'>
           <img
-            src={SVG_XR_MODE}
+            src={RESOURCE.ICON_XR_MODE}
             className='animate-scale'
             onClick={xrModeToggle}
           />
@@ -106,7 +103,7 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
         <div id='fullscreen'>
           <img
             ref={ref_fullscreen}
-            src={SVG_FULLSCREEN}
+            src={RESOURCE.ICON_FULLSCREEN}
             className='animate-scale'
             onClick={fullscreenToggle}
           />
@@ -159,4 +156,4 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
   </div>
 }
 
-export default InterfaceMobile
+export { InterfaceMobile }

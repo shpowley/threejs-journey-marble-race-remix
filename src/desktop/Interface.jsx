@@ -82,4 +82,4 @@ const Interface = () => {
   </div>
 }
 
-export default Interface
+export { Interface }

@@ -4,7 +4,7 @@ import { useXRSessionVisibilityState } from '@react-three/xr'
 
 const CAMERA_OFFSET = -11
 
-export default function Lights() {
+const Lights = () => {
   const ref_light = useRef()
 
   let xr_mode = false
@@ -41,3 +41,5 @@ export default function Lights() {
     <ambientLight intensity={1.5} />
   </>
 }
+
+export { Lights }
