@@ -3,6 +3,7 @@ import { XR, createXRStore } from '@react-three/xr'
 
 import { ExperienceMobile } from './ExperienceMobile.jsx'
 import { InterfaceMobile } from './InterfaceMobile.jsx'
+import { CAMERA_DEFAULTS } from '../common/Constants.js'
 
 const xr_store = createXRStore({
   handTracking: false,
@@ -11,24 +12,17 @@ const xr_store = createXRStore({
   planeDetection: false
 })
 
-const RenderViewMobile = () => {
-  return <>
-    <Canvas
-      shadows
+const RenderViewMobile = () => <>
+  <Canvas
+    shadows
+    camera={CAMERA_DEFAULTS}
+  >
+    <XR store={xr_store}>
+      <ExperienceMobile />
+    </XR>
+  </Canvas>
 
-      camera={{
-        fov: 45,
-        near: 0.1,
-        far: 1000
-      }}
-    >
-      <XR store={xr_store}>
-        <ExperienceMobile />
-      </XR>
-    </Canvas>
-
-    <InterfaceMobile store={xr_store} />
-  </>
-}
+  <InterfaceMobile store={xr_store} />
+</>
 
 export { RenderViewMobile }

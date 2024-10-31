@@ -21,7 +21,7 @@ body,
 
 @font-face {
   font-family: 'Bebas Neue';
-  src: url('bebas-neue-v9-latin-regular.woff');
+  src: url('/bebas-neue-v9-latin-regular.woff');
 }
 
 #interface {
@@ -35,6 +35,19 @@ body,
   pointer-events: none;
 
   font-family: 'Bebas Neue', cursive;
+}
+
+/* GAME TIMER */
+#hit-test-instructions {
+  position: absolute;
+  top: 10%;
+  left: 0;
+  width: 100%;
+  color: #fff;
+  font-size: 22px;
+  background: #00000033;
+  padding: 10px 20px 5px 20px;
+  text-align: left;
 }
 
 /* GAME TIMER */
@@ -159,19 +172,8 @@ body,
   box-shadow: #2d234266 0 2px 4px, #2d23424d 0 7px 13px -3px, #3a3a3a8c 0 -3px 5px 2px inset;
 }
 
-@media screen and (orientation: landscape) {
-  .time {
-    top: 20%;
-  }
-
-  #touch-joystick {
-    bottom: 60px;
-    left: 60px;
-  }
-}
-
 /* HEADSET AR / VR BUTTONS */
-#div_buttons {
+#div_buttons, #hit-test-play {
   display: flex;
   flex-direction: row;
   gap: 30px;
@@ -182,7 +184,7 @@ body,
   transform: translate(-50%, 0);
 }
 
-#div_buttons button {
+#div_buttons button, #hit-test-play {
   background: black;
   border-radius: 0.5rem;
   border: none;
@@ -192,4 +194,24 @@ body,
   cursor: pointer;
   font-size: 1.5rem;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 1);
+  pointer-events: auto;
+}
+
+@media screen and (orientation: landscape) {
+  .time {
+    top: 20%;
+  }
+
+  #touch-joystick {
+    bottom: 60px;
+    left: 60px;
+  }
+
+  #hit-test-instructions {
+    position: absolute;
+    top: 14px;
+    left: auto;
+    right: 14px;
+    width: 340px;
+  }
 }

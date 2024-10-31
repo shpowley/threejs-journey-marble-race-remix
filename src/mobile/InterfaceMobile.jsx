@@ -6,16 +6,16 @@ import { useGame, GAME_STATES } from '../stores/useGame.js'
 import { useControls } from '../stores/useControls.js'
 import { RESOURCE, XR_MODE } from '../common/Constants.js'
 
-const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
-  const xr_mode = store ? store.getState().visibilityState : null
-
-  const
-    ref_time = useRef(),
-    ref_fullscreen = useRef()
+const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = false, ar_play_button_visible = false }) => {
+  const refs = {
+    time: useRef(),
+    fullscreen: useRef()
+  }
 
   const
     restartGame = useGame(state => state.restartGame),
-    phase = useGame(state => state.phase)
+    phase = useGame(state => state.phase),
+    game_playing_mode = [GAME_STATES.READY, GAME_STATES.PLAYING, GAME_STATES.ENDED].includes(phase)
 
   const
     setPosition = useControls(state => state.setPosition),
@@ -30,26 +30,33 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
       setPosition(0, 0)
     }, []),
 
-    // NOTE: TOGGLING TRUE/FALSE IS REQUIRED TO TRIGGER MULTIPLE VIA "JUMP" SUBSCRIPTION
+    // NOTE: TOGGLING TRUE => FALSE IS REQUIRED TO TRIGGER ZUSTAND "JUMP" SUBSCRIPTION
     jump = useCallback(() => {
       setJump(true)
-      setJump(false)
+      setTimeout(() => setJump(false), 200)
     }, []),
 
     fullscreenToggle = useCallback(() => {
       if (document.fullscreenElement) {
-        ref_fullscreen.current.src = RESOURCE.ICON_FULLSCREEN
+        refs.fullscreen.current.src = RESOURCE.ICON_FULLSCREEN
         document.exitFullscreen()
       }
       else {
-        ref_fullscreen.current.src = RESOURCE.ICON_FULLSCREEN_EXIT
+        refs.fullscreen.current.src = RESOURCE.ICON_FULLSCREEN_EXIT
         document.documentElement.requestFullscreen()
       }
     }, []),
 
-    xrModeToggle = () => xr_mode
+    enterAR = () => {
+      refs.fullscreen.current.src = RESOURCE.ICON_FULLSCREEN
+      store.enterAR()
+    },
+
+    xrModeToggle = () => xr_visibility
       ? store.getState().session.end()
-      : store.enterAR()
+      : enterAR(),
+
+    hitTestPlay = () => useGame.setState({ phase: GAME_STATES.READY })
 
   // UPDATE GAME TIMER
   useEffect(() => {
@@ -60,11 +67,21 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
 
       let elapsed_time = 0
 
-      if (phase === GAME_STATES.PLAYING) {
-        elapsed_time = Date.now() - start_time
-      }
-      else if (phase === GAME_STATES.ENDED) {
-        elapsed_time = end_time - start_time
+      switch (phase) {
+        case GAME_STATES.READY:
+          refs.time.current.textContent = '0.00'
+          return
+
+        case GAME_STATES.PLAYING:
+          elapsed_time = Date.now() - start_time
+          break
+
+        case GAME_STATES.ENDED:
+          elapsed_time = end_time - start_time
+          break
+
+        case GAME_STATES.HIT_TEST:
+          return
       }
 
       // CONVERT TO SECONDS
@@ -72,8 +89,8 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
       elapsed_time = elapsed_time.toFixed(2)
 
       // UPDATE THE TIME DISPLAY
-      if (ref_time.current) {
-        ref_time.current.textContent = elapsed_time
+      if (refs.time.current) {
+        refs.time.current.textContent = elapsed_time
       }
     })
 
@@ -90,7 +107,7 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
         navigator?.xr.isSessionSupported(XR_MODE.AR) &&
         <div id='xr_mode'>
           <img
-            src={RESOURCE.ICON_XR_MODE}
+            src={xr_visibility ? RESOURCE.ICON_XR_EXIT : RESOURCE.ICON_XR_MODE}
             className='animate-scale'
             onClick={xrModeToggle}
           />
@@ -98,10 +115,10 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
       }
 
       {
-        document.fullscreenEnabled && !xr_overlay &&
+        !xr_overlay &&
         <div id='fullscreen'>
           <img
-            ref={ref_fullscreen}
+            ref={refs.fullscreen}
             src={RESOURCE.ICON_FULLSCREEN}
             className='animate-scale'
             onClick={fullscreenToggle}
@@ -111,12 +128,15 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
     </div>
 
     {/* GAME TIMER */}
-    <div
-      ref={ref_time}
-      className='time'
-    >
-      0.00
-    </div>
+    {
+      game_playing_mode &&
+      <div
+        ref={refs.time}
+        className='time'
+      >
+        0.00
+      </div>
+    }
 
     {/* RESTART BUTTON */}
     {
@@ -130,28 +150,55 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
       </div>
     }
 
-    {/* CONTROLS: VIRTUAL JOYSTICK + JUMP */}
-    <div
-      id='touch-controls-container'
-      onTouchStart={jump}
-    >
-      {/* e.stopPropagation() PREVENTS TOUCHING THE JOYSTICK AND TRIGGERING JUMP */}
+    {/*
+      CONTROLS: VIRTUAL JOYSTICK + JUMP
+      - e.stopPropagation() PREVENTS TOUCHING THE JOYSTICK AND TRIGGERING JUMP
+    */}
+    {
+      game_playing_mode &&
       <div
-        id='touch-joystick'
-        onTouchStart={e => e.stopPropagation()}
+        id='touch-controls-container'
+        onTouchStart={jump}
       >
-        <Joystick
-          baseColor={'#00000000'}
-          stickColor={'#ececec'}
-          size={120}
-          stickSize={80}
-          throttle={100}
+        <div
+          id='touch-joystick'
+          onTouchStart={e => e.stopPropagation()}
+        >
+          <Joystick
+            baseColor={'#00000000'}
+            stickColor={'#ececec'}
+            size={120}
+            stickSize={80}
+            throttle={100}
 
-          move={joystickMove}
-          stop={joystickStop}
-        />
+            move={joystickMove}
+            stop={joystickStop}
+          />
+        </div>
       </div>
-    </div>
+    }
+
+    {/* HIT-TEST INSTRUCTIONS */}
+    {
+      phase === GAME_STATES.HIT_TEST &&
+      <div id='hit-test-instructions'>
+        1 - aim with the targeting reticle<br />
+        2 - choose a flat surface (floor, table, etc.)<br />
+        3 - place obstacle course (tap screen)<br />
+        4 - press "play"
+      </div>
+    }
+
+    {/* HIT-TEST PLAY BUTTON */}
+    {
+      phase === GAME_STATES.HIT_TEST && ar_play_button_visible &&
+      <button
+        id='hit-test-play'
+        onClick={hitTestPlay}
+      >
+        PLAY
+      </button>
+    }
   </div>
 }
 

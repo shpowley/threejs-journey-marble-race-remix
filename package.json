@@ -9,18 +9,19 @@
     "outdated": "npm outdated --depth=0",
     "update": "npm update",
     "build": "vite build",
+    "deploy": "vercel --prod",
     "uninstall": "rm -rf node_modules && rm -rf dist && rm package-lock.json"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.2",
+    "@vitejs/plugin-react": "^4.3.3",
     "vite": "^5.4.9",
     "vite-plugin-restart": "^0.4.1"
   },
   "dependencies": {
-    "@react-three/drei": "^9.114.3",
+    "@react-three/drei": "^9.114.6",
     "@react-three/fiber": "^8.17.10",
     "@react-three/rapier": "^1.5.0",
-    "@react-three/xr": "^6.2.13",
+    "@react-three/xr": "^6.2.15",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

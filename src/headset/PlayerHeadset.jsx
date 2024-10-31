@@ -6,6 +6,7 @@ import { useXRInputSourceState } from '@react-three/xr'
 
 import { useGame, GAME_STATES } from '../stores/useGame.js'
 import { XR_MODE } from '../common/Constants.js'
+import { useWebXR, XR_CAMERA } from '../stores/useWebXR.js'
 
 const helpers = {
   vec3: new THREE.Vector3(),
@@ -31,6 +32,8 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
     restartGame = useGame(state => state.restartGame),
     block_count = useGame(state => state.block_count)
 
+  const xr_camera_lock = useWebXR(state => state.xr_camera_lock)
+
   const jump = () => {
     const origin = ref_player.current.translation()
     origin.y -= 0.31
@@ -43,7 +46,7 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
       ref_player.current.applyImpulse({ x: 0, y: 0.5, z: 0 })
       helpers.is_jumping = true
 
-      setTimeout(() => helpers.is_jumping = false, 300)
+      setTimeout(() => helpers.is_jumping = false, 200)
     }
   }
 
@@ -75,7 +78,7 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
   }, [])
 
   useFrame((state, delta, xr_frame) => {
-    if (!ref_player.current) {
+    if (!ref_player.current || helpers.phase === GAME_STATES.HIT_TEST) {
       return
     }
 
@@ -118,19 +121,37 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
     const position_player = ref_player.current.translation()
 
     if (xr_frame) {
-      if (xr_mode === XR_MODE.VR) {
-        const xr_camera_pos = ref_xr_origin.current?.children[0].position
 
+      // IMMERSIVE VR
+      if (xr_mode === XR_MODE.VR) {
+
+        // UNLOCKED XR CAMERA (USER-SELECTED MODE)
         helpers.vec3.set(
-          position_player.x - xr_camera_pos.x,
-          position_player.y - xr_camera_pos.y - 0.3,
-          position_player.z - xr_camera_pos.z + 2.25
+          position_player.x,
+          position_player.y - 0.3,
+          position_player.z + 2.25
         )
 
+        if (xr_camera_lock !== XR_CAMERA.UNLOCKED) {
+          const xr_camera_pos = ref_xr_origin.current.children[0].position
+
+          // XR CAMERA LOCK ALL AXES (USER-SELECTED MODE ..THIS IS THE DEFAULT)
+          if (xr_camera_lock === XR_CAMERA.LOCK_ALL_AXES) {
+            helpers.vec3.sub(xr_camera_pos)
+          }
+
+          // XR CAMERA LOCK VERTICAL AXIS ONLY (USER-SELECTED MODE)
+          else if (xr_camera_lock === XR_CAMERA.LOCK_Y_AXIS) {
+            helpers.vec3.y -= xr_camera_pos.y
+          }
+        }
+
         smoothed_camera_position.lerp(helpers.vec3, 5 * delta)
-        ref_xr_origin.current?.position.copy(smoothed_camera_position)
+        ref_xr_origin.current.position.copy(smoothed_camera_position)
       }
-      // ELSE IF xr_mode = XR_MODE.AR ..DON'T USE THE CHASE-CAM
+
+      // MIXED REALITY / AUGMENTED REALITY
+      // ELSE IF xr_mode = XR_MODE.AR ..DON'T USE THE CHASE-CAM AT ALL
     }
     else {
       helpers.vec3.set(position_player.x, position_player.y + 0.65, position_player.z + 2.25)

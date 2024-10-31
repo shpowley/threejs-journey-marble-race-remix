@@ -3,16 +3,14 @@ import { subscribeWithSelector } from 'zustand/middleware'
 
 const useControls = create(
   subscribeWithSelector(
-    set => {
-      return {
-        controller_x: 0,
-        controller_y: 0,
-        jump: false,
+    set => ({
+      controller_x: 0,
+      controller_y: 0,
+      jump: false,
 
-        setPosition: (controller_x, controller_y) => set({ controller_x, controller_y }),
-        setJump: jump => set({ jump }),
-      }
-    }
+      setPosition: (controller_x, controller_y) => set({ controller_x, controller_y }),
+      setJump: jump => set({ jump }),
+    })
   )
 )
 
