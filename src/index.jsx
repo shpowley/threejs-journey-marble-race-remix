@@ -8,14 +8,11 @@ import { RenderViewHeadset } from './headset/RenderViewHeadset'
 const root = createRoot(document.getElementById('root'))
 
 if (isBrowser) {
-  console.log("DESKTOP")
   root.render(<RenderViewDesktop />)
 }
 else if (isMobile) {
-  console.log("MOBILE DEVICE")
   root.render(<RenderViewMobile />)
 }
 else if (isWearable) {
-  console.log("XR-HEADSET")
   root.render(<RenderViewHeadset />)
 }

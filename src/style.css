@@ -19,6 +19,11 @@ body,
   margin: 0;
 }
 
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('bebas-neue-v9-latin-regular.woff');
+}
+
 #interface {
   position: fixed;
   top: 0;

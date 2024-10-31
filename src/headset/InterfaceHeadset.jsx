@@ -73,6 +73,7 @@ const InterfaceHeadset = ({ inner_ref = null, ...props }) => {
         font={RESOURCE.FONT_BEBAS_NEUE}
         fontSize={0.06}
         textAlign='center'
+        frustumCulled={false}
         position={[0, -0.0065, 0.01]}
         text='0.00'
       />
@@ -96,6 +97,7 @@ const InterfaceHeadset = ({ inner_ref = null, ...props }) => {
           font={RESOURCE.FONT_BEBAS_NEUE}
           fontSize={0.11}
           textAlign='center'
+          frustumCulled={false}
           position={[0, -0.0065, 0.01]}
           text='RESTART'
         />

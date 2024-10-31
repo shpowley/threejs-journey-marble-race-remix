@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react'
-import { useThree } from '@react-three/fiber'
-import { XROrigin } from '@react-three/xr'
+import { useEffect, useRef, useState } from 'react'
+import { useXRSessionVisibilityState, useXRStore, XROrigin } from '@react-three/xr'
 import { Physics } from '@react-three/rapier'
 
 import { Lights } from '../Lights.jsx'
@@ -8,47 +7,65 @@ import { Level } from '../Level.jsx'
 import { InterfaceHeadset } from './InterfaceHeadset.jsx'
 import { PlayerHeadset } from './PlayerHeadset.jsx'
 import { useGame } from '../stores/useGame.js'
+import { XR_MODE } from '../common/Constants.js'
 
+const XR_SCALE = {
+  VR: 2.0,
+  AR: 30.0
+}
+
+const BOARD_POSITION = {
+  DEFAULT: [0, 0, 0],
+  AR: [10, 5, -5]
+}
+
+const BOARD_ROTATION = {
+  DEFAULT: [0, 0, 0],
+  AR: [0, Math.PI * 0.3, 0]
+}
 
 const ExperienceHeadset = () => {
   const refs = {
     xr_origin: useRef(),
-    hud: useRef()
+    hud: useRef(),
+    game_board: useRef()
   }
+
+  const
+    [board_position, setBoardPosition] = useState(BOARD_POSITION.DEFAULT),
+    [board_rotation, setBoardRotation] = useState(BOARD_ROTATION.DEFAULT)
+
+  const xr_visibility = useXRSessionVisibilityState()
+  const xr_mode = useXRStore().getState()?.mode
 
   const
     block_count = useGame(state => state.block_count),
     block_seed = useGame(state => state.block_seed)
 
-  // THREE.JS XR 'sessionstart' AND 'sessionend' EVENTS
-  const renderer_xr = useThree(state => state.gl.xr)
+  useEffect(() => {
+    if (xr_visibility) {
+      if (xr_mode === XR_MODE.AR) {
+        setBoardPosition(BOARD_POSITION.AR)
+      }
 
-  const handlers = {
-    XRSessionStart: useCallback(() => {
       if (refs.hud.current) {
         refs.hud.current.visible = true
       }
-    }),
+    }
+    else {
+      setBoardPosition(BOARD_POSITION.DEFAULT)
 
-    XRSessionEnd: useCallback(() => {
       if (refs.hud.current) {
         refs.hud.current.visible = false
       }
-    })
-  }
+    }
+  }, [xr_visibility])
 
+  // ATTACHES "HUD" MESHES TO HEADSET / XR-CAMERA
   useEffect(() => {
-    renderer_xr.addEventListener('sessionstart', handlers.XRSessionStart)
-    renderer_xr.addEventListener('sessionend', handlers.XRSessionEnd)
-
     if (refs.xr_origin.current && refs.hud.current) {
       // camera.add(refs.hud.current)
       refs.xr_origin.current.children[0].add(refs.hud.current) // PREFERRED
-    }
-
-    return () => {
-      renderer_xr.removeEventListener('sessionstart', handlers.XRSessionStart)
-      renderer_xr.removeEventListener('sessionend', handlers.XRSessionEnd)
     }
   }, [])
 
@@ -60,7 +77,8 @@ const ExperienceHeadset = () => {
 
     <XROrigin
       ref={refs.xr_origin}
-      scale={2.0}
+      position={xr_mode === XR_MODE.AR ? [0, 0, 16] : [0, 0, 0]}
+      scale={xr_mode === XR_MODE.AR ? XR_SCALE.AR : XR_SCALE.VR}
     />
 
     <InterfaceHeadset
@@ -69,16 +87,28 @@ const ExperienceHeadset = () => {
       visible={false}
     />
 
-    <Physics debug={false} >
-      <Lights />
+    <group
+      ref={refs.game_board}
+      position={board_position}
+      rotation={board_rotation}
+    >
+      <Physics debug={false} >
+        <Lights
+          ref_xr_origin={refs.xr_origin}
+          shadows={!xr_visibility || xr_mode === XR_MODE.VR}
+        />
 
-      <Level
-        count={block_count}
-        seed={block_seed}
-      />
+        <Level
+          count={block_count}
+          seed={block_seed}
+        />
 
-      <PlayerHeadset ref_xr_origin={refs.xr_origin} />
-    </Physics>
+        <PlayerHeadset
+          ref_xr_origin={refs.xr_origin}
+          xr_mode={xr_mode}
+        />
+      </Physics>
+    </group>
   </>
 }
 

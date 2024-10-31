@@ -5,6 +5,7 @@ import { RigidBody, useRapier } from '@react-three/rapier'
 import { useXRInputSourceState } from '@react-three/xr'
 
 import { useGame, GAME_STATES } from '../stores/useGame.js'
+import { XR_MODE } from '../common/Constants.js'
 
 const helpers = {
   vec3: new THREE.Vector3(),
@@ -12,7 +13,7 @@ const helpers = {
   phase: null
 }
 
-const PlayerHeadset = ({ ref_xr_origin }) => {
+const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
   const ref_player = useRef()
 
   const [smoothed_camera_position] = useState(() => new THREE.Vector3(10, 10, 10))
@@ -117,12 +118,19 @@ const PlayerHeadset = ({ ref_xr_origin }) => {
     const position_player = ref_player.current.translation()
 
     if (xr_frame) {
-      const xr_camera_vertical_offset = ref_xr_origin?.current?.children[0].position.y + 0.3
+      if (xr_mode === XR_MODE.VR) {
+        const xr_camera_pos = ref_xr_origin.current?.children[0].position
 
-      helpers.vec3.set(position_player.x, position_player.y - xr_camera_vertical_offset, position_player.z + 2.25)
-      smoothed_camera_position.lerp(helpers.vec3, 5 * delta)
+        helpers.vec3.set(
+          position_player.x - xr_camera_pos.x,
+          position_player.y - xr_camera_pos.y - 0.3,
+          position_player.z - xr_camera_pos.z + 2.25
+        )
 
-      ref_xr_origin?.current?.position.copy(smoothed_camera_position)
+        smoothed_camera_position.lerp(helpers.vec3, 5 * delta)
+        ref_xr_origin.current?.position.copy(smoothed_camera_position)
+      }
+      // ELSE IF xr_mode = XR_MODE.AR ..DON'T USE THE CHASE-CAM
     }
     else {
       helpers.vec3.set(position_player.x, position_player.y + 0.65, position_player.z + 2.25)

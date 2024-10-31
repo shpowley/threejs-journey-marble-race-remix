@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { Float, Text, useGLTF } from '@react-three/drei'
@@ -6,7 +6,11 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier'
 
 import { RESOURCE } from './common/Constants'
 
-const helper_vec3 = new THREE.Vector3()
+const helpers = {
+  vec3: new THREE.Vector3(),
+  quaternion: new THREE.Quaternion(),
+  euler: new THREE.Euler()
+}
 
 const box_geometry = new THREE.BoxGeometry(1, 1, 1)
 
@@ -18,6 +22,23 @@ const
 
 const getRandomSpeed = () => {
   return (Math.random() + 0.2) * (Math.random() > 0.5 ? 1 : -1)
+}
+
+const OBSTACLES = {
+  AXE: {
+    POSITION: [0, 0.75, 0],
+    SIZE: [1.5, 1.5, 0.3]
+  },
+
+  LIMBO: {
+    POSITION: [0, 0.3, 0],
+    SIZE: [3.5, 0.3, 0.3]
+  },
+
+  SPINNER: {
+    POSITION: [0, 0.3, 0],
+    SIZE: [3.5, 0.3, 0.3]
+  },
 }
 
 // STARTING BLOCK : 'FLOATING' GAME TITLE + FLOOR
@@ -94,14 +115,27 @@ const BlockEnd = ({ position = [0, 0, 0] }) => {
   </group>
 }
 
-// USES useEffect / setAngvel() INSTEAD OF useFrame / setNextKinematicRotation() FROM ORIGINAL LESSON
 const BlockSpinner = ({ position = [0, 0, 0] }) => {
-  const ref_spinner = useRef()
-  const [spin_speed] = useState(() => getRandomSpeed())
+  const refs = {
+    body: useRef(),
+    mesh: useRef()
+  }
+
+  const [rotation_speed] = useState(() => getRandomSpeed())
 
   useEffect(() => {
-    ref_spinner.current.setAngvel(helper_vec3.set(0, spin_speed, 0))
+    helpers.vec3.set(position[0], position[1] + OBSTACLES.SPINNER.POSITION[1], position[2])
+    refs.body.current.setTranslation(helpers.vec3)
   }, [])
+
+  useFrame(state => {
+    const time = state.clock.getElapsedTime()
+
+    helpers.euler.set(0, time * rotation_speed, 0)
+    helpers.quaternion.setFromEuler(helpers.euler)
+    refs.body.current?.setRotation(helpers.quaternion)
+    refs.mesh.current.setRotationFromQuaternion(helpers.quaternion)
+  })
 
   return <group position={position}>
     <mesh
@@ -113,33 +147,45 @@ const BlockSpinner = ({ position = [0, 0, 0] }) => {
     />
 
     <RigidBody
-      type='kinematicVelocity' // REQUIRED FOR setAngvel()
-      position={[0, 0.3, 0]}
+      type='kinematicPosition'
+      position={OBSTACLES.SPINNER.POSITION}
       restitution={0.2}
       friction={0}
-      ref={ref_spinner}
+      ref={refs.body}
     >
-      <mesh
-        material={material_obstacle}
-        geometry={box_geometry}
-        scale={[3.5, 0.3, 0.3]}
-        castShadow
-        receiveShadow
+      <CuboidCollider
+        args={OBSTACLES.SPINNER.SIZE}
+        scale={0.5}
       />
     </RigidBody>
+
+    <mesh
+      material={material_obstacle}
+      geometry={box_geometry}
+      position={OBSTACLES.SPINNER.POSITION}
+      scale={OBSTACLES.SPINNER.SIZE}
+      ref={refs.mesh}
+      castShadow
+      receiveShadow
+    />
   </group>
 }
 
 const BlockLimbo = ({ position = [0, 0, 0] }) => {
-  const ref_limbo = useRef()
+  const refs = {
+    body: useRef(),
+    mesh: useRef()
+  }
+
   const [time_offset] = useState(() => Math.random() * Math.PI * 2)
 
   useFrame(state => {
-    if (ref_limbo.current) {
+    if (refs.body.current) {
       const time = state.clock.getElapsedTime()
       const y = Math.sin(time + time_offset) + 1.15
 
-      ref_limbo.current.setNextKinematicTranslation(helper_vec3.set(position[0], position[1] + y, position[2]))
+      refs.body.current.setTranslation(helpers.vec3.set(position[0], position[1] + y, position[2]))
+      refs.mesh.current.position.setY(y)
     }
   })
 
@@ -154,32 +200,44 @@ const BlockLimbo = ({ position = [0, 0, 0] }) => {
 
     <RigidBody
       type='kinematicPosition'
-      position={[0, 0.3, 0]}
+      position={OBSTACLES.LIMBO.POSITION}
       restitution={0.2}
       friction={0}
-      ref={ref_limbo}
+      ref={refs.body}
     >
-      <mesh
-        material={material_obstacle}
-        geometry={box_geometry}
-        scale={[3.5, 0.3, 0.3]}
-        castShadow
-        receiveShadow
+      <CuboidCollider
+        args={OBSTACLES.LIMBO.SIZE}
+        scale={0.5}
       />
     </RigidBody>
+
+    <mesh
+      material={material_obstacle}
+      geometry={box_geometry}
+      position={OBSTACLES.LIMBO.POSITION}
+      scale={OBSTACLES.LIMBO.SIZE}
+      ref={refs.mesh}
+      castShadow
+      receiveShadow
+    />
   </group>
 }
 
 const BlockAxe = ({ position = [0, 0, 0] }) => {
-  const ref_axe = useRef()
+  const refs = {
+    body: useRef(),
+    mesh: useRef()
+  }
+
   const [time_offset] = useState(() => Math.random() * Math.PI * 2)
 
   useFrame(state => {
-    if (ref_axe.current) {
+    if (refs.body.current) {
       const time = state.clock.getElapsedTime()
       const x = Math.sin(time + time_offset) * 1.25
 
-      ref_axe.current.setNextKinematicTranslation(helper_vec3.set(position[0] + x, position[1] + 0.75, position[2]))
+      refs.body.current.setTranslation(helpers.vec3.set(position[0] + x, position[1] + 0.75, position[2]))
+      refs.mesh.current.position.setX(x)
     }
   })
 
@@ -194,65 +252,70 @@ const BlockAxe = ({ position = [0, 0, 0] }) => {
 
     <RigidBody
       type='kinematicPosition'
-      position={[0, 0.75, 0]}
+      position={OBSTACLES.AXE.POSITION}
       restitution={0.2}
       friction={0}
-      ref={ref_axe}
+      ref={refs.body}
     >
-      <mesh
-        material={material_obstacle}
-        geometry={box_geometry}
-        scale={[1.5, 1.5, 0.3]}
-        castShadow
-        receiveShadow
+      <CuboidCollider
+        args={OBSTACLES.AXE.SIZE}
+        scale={0.5}
       />
     </RigidBody>
+
+    <mesh
+      material={material_obstacle}
+      geometry={box_geometry}
+      position={OBSTACLES.AXE.POSITION}
+      scale={OBSTACLES.AXE.SIZE}
+      ref={refs.mesh}
+      castShadow
+      receiveShadow
+    />
   </group>
 }
 
 const Bounds = ({ length = 1 }) => {
-  return <>
-    <RigidBody
-      type='fixed'
+  return <RigidBody
+    type='fixed'
+    restitution={0.2}
+    friction={0}
+  >
+    {/* RIGHT WALL */}
+    <mesh
+      geometry={box_geometry}
+      material={material_wall}
+      castShadow
+      scale={[0.3, 1.5, 4 * length]}
+      position={[2.15, 0.75, -(length * 2) + 2]}
+    />
+
+    {/* LEFT WALL */}
+    <mesh
+      geometry={box_geometry}
+      material={material_wall}
+      receiveShadow
+      scale={[0.3, 1.5, 4 * length]}
+      position={[-2.15, 0.75, -(length * 2) + 2]}
+    />
+
+    {/* BACK WALL */}
+    <mesh
+      geometry={box_geometry}
+      material={material_wall}
+      receiveShadow
+      scale={[4, 1.5, 0.3]}
+      position={[0, 0.75, -(length * 4) + 2]}
+    />
+
+    {/* FLOOR */}
+    <CuboidCollider
+      args={[2, 0.1, 2 * length]}
+      position={[0, -0.1, -(length * 2) + 2]}
       restitution={0.2}
-      friction={0}
-    >
-      {/* RIGHT WALL */}
-      <mesh
-        geometry={box_geometry}
-        material={material_wall}
-        castShadow
-        scale={[0.3, 1.5, 4 * length]}
-        position={[2.15, 0.75, -(length * 2) + 2]}
-      />
-
-      {/* LEFT WALL */}
-      <mesh
-        geometry={box_geometry}
-        material={material_wall}
-        receiveShadow
-        scale={[0.3, 1.5, 4 * length]}
-        position={[-2.15, 0.75, -(length * 2) + 2]}
-      />
-
-      {/* BACK WALL */}
-      <mesh
-        geometry={box_geometry}
-        material={material_wall}
-        receiveShadow
-        scale={[4, 1.5, 0.3]}
-        position={[0, 0.75, -(length * 4) + 2]}
-      />
-
-      {/* FLOOR */}
-      <CuboidCollider
-        args={[2, 0.1, 2 * length]}
-        position={[0, -0.1, -(length * 2) + 2]}
-        restitution={0.2}
-        friction={1}
-      />
-    </RigidBody>
-  </>
+      friction={1}
+    />
+  </RigidBody>
 }
 
 const Level = ({

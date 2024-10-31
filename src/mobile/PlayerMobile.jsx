@@ -66,7 +66,7 @@ const orientationChange = () => {
 const PlayerMobile = () => {
   const ref_player = useRef()
 
-  const xr_mode = useXRSessionVisibilityState()
+  const xr_visibility = useXRSessionVisibilityState()
 
   const [smoothed_camera_position] = useState(() => new THREE.Vector3(0, 10, 10))
   const [smoothed_camera_target] = useState(() => new THREE.Vector3())
@@ -168,7 +168,7 @@ const PlayerMobile = () => {
     // CAMERA AND CAMERA TARGET
     const position_player = ref_player.current.translation()
 
-    if (!xr_mode) {
+    if (!xr_visibility) {
       helper_vec3.set(position_player.x, position_player.y + PLAYER_OFFSET.y, position_player.z + PLAYER_OFFSET.z)
       smoothed_camera_position.lerp(helper_vec3, 5 * delta)
       state.camera.position.copy(smoothed_camera_position)

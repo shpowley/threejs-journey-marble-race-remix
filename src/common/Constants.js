@@ -6,4 +6,9 @@ const RESOURCE = {
   ICON_XR_MODE: './ar_view.svg'
 }
 
-export { RESOURCE }
+const XR_MODE = {
+  AR: 'immersive-ar',
+  VR: 'immersive-vr'
+}
+
+export { RESOURCE, XR_MODE }

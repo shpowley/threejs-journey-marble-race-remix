@@ -4,7 +4,7 @@ import { Joystick } from 'react-joystick-component'
 
 import { useGame, GAME_STATES } from '../stores/useGame.js'
 import { useControls } from '../stores/useControls.js'
-import { RESOURCE } from '../common/Constants.js'
+import { RESOURCE, XR_MODE } from '../common/Constants.js'
 
 const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
   const xr_mode = store ? store.getState().visibilityState : null
@@ -30,8 +30,7 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
       setPosition(0, 0)
     }, []),
 
-    // TRIGGERS "JUMP" useEffect()
-    // AND QUICKLY TOGGLING ALLOWS SUBSEQUENT JUMPS
+    // NOTE: TOGGLING TRUE/FALSE IS REQUIRED TO TRIGGER MULTIPLE VIA "JUMP" SUBSCRIPTION
     jump = useCallback(() => {
       setJump(true)
       setJump(false)
@@ -88,7 +87,7 @@ const InterfaceMobile = ({ store = null, xr_overlay = false }) => {
     {/* QUICK SETTINGS */}
     <div id='quick-settings'>
       {
-        navigator?.xr.isSessionSupported('immersive-ar') &&
+        navigator?.xr.isSessionSupported(XR_MODE.AR) &&
         <div id='xr_mode'>
           <img
             src={RESOURCE.ICON_XR_MODE}
