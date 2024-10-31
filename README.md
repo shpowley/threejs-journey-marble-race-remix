@@ -27,5 +27,5 @@ This project serves as a mobile and webxr experiment that builds on the final le
 
 5-ar-hit-test
 - adds webxr "hit-testing" to placement of the toy obstacle course of a flat surface
-- NOTE: hit-test placement feature is broken on react-three/xr + android at the moment, but playable
-- additional features such as headset-vr camera-lock modes
+- NOTE: hit-test placement feature is broken on react-three/xr + android at the moment, but still playable
+- additional features: headset-vr camera-lock modes toggle
