@@ -29,7 +29,6 @@ This project serves as a mobile and webxr experiment that builds on the final le
 - adds webxr "hit-testing" to placement of the toy obstacle course of a flat surface
 - NOTE: hit-test placement feature is broken on react-three/xr + android at the moment, but still playable
 - additional features: headset-vr camera-lock modes toggle
-<<<<<<< HEAD
 
 6-hands-only-controls
 - hands-only controls (immersive-vr only)
@@ -38,5 +37,3 @@ This project serves as a mobile and webxr experiment that builds on the final le
   - right-hand zone + pinch-to-jump
 
 - manapotion.js virtual joystick with "follow mode" for mobile and mobile-ar
-=======
->>>>>>> 6171d59d68d8c5ef565432aaf5532517134aaf5c
