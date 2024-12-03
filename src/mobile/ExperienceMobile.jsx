@@ -7,9 +7,10 @@ import { Lights } from '../Lights.jsx'
 import { Level } from '../Level.jsx'
 import { PlayerMobile } from './PlayerMobile.jsx'
 import { InterfaceMobile } from './InterfaceMobile.jsx'
-import { GAME_STATES, useGame } from '../stores/useGame.js'
-import { XR_MODE } from '../common/Constants.js'
 import { HitTestMobile } from './HitTestMobile.jsx'
+import { GAME_STATES, useStoreGame } from '../stores/useStoreGame.js'
+import { useStoreWebXR } from '../stores/useStoreWebXR.js'
+import { XR_MODE } from '../common/Constants.js'
 
 const BOARD = {
   POSITION_DEFAULT: [0, 0, 0],
@@ -30,8 +31,8 @@ const ExperienceMobile = () => {
   const camera = useThree(state => state.camera)
 
   const
-    block_count = useGame(state => state.block_count),
-    block_seed = useGame(state => state.block_seed)
+    block_count = useStoreGame(state => state.block_count),
+    block_seed = useStoreGame(state => state.block_seed)
 
   const xr_visibility = useXRSessionVisibilityState()
   const xr_store = useXRStore()
@@ -49,7 +50,8 @@ const ExperienceMobile = () => {
 
     // XR MODE (AR ONLY)
     if (xr_visibility) {
-      useGame.setState({ phase: GAME_STATES.HIT_TEST })
+      useStoreGame.setState({ phase: GAME_STATES.HIT_TEST })
+      useStoreWebXR.setState({ xr_visibility: xr_visibility })
       setARPlayButtonVisible(false)
 
       if (refs.game_board.current) {
@@ -59,16 +61,17 @@ const ExperienceMobile = () => {
 
     // NON-XR MODE
     else {
+      useStoreWebXR.setState({ xr_visibility: null })
 
       // ATTEMPTS TO RESTORE CAMERA, OTHERWISE VISUALLY SQUISHED
       if (camera_restore) {
         camera.copy(camera_restore)
       }
 
-      const game_phase = useGame.getState().phase
+      const game_phase = useStoreGame.getState().phase
 
       if (game_phase === GAME_STATES.HIT_TEST) {
-        useGame.setState({ phase: GAME_STATES.READY })
+        useStoreGame.setState({ phase: GAME_STATES.READY })
       }
 
       setBoardPosition(BOARD.POSITION_DEFAULT)
@@ -87,7 +90,7 @@ const ExperienceMobile = () => {
   return <>
     <color
       attach="background"
-      args={['#bdedfc']}
+      args={[0xbdedfc]}
     />
 
     <XROrigin

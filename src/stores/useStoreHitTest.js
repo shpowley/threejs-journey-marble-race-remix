@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-const useHitTest = create(
+const useStoreHitTest = create(
   subscribeWithSelector(
     set => ({
       // STORES WEBXR HIT-TEST RESULTS - mat4 (three.Matrix4) OR null
@@ -11,4 +11,4 @@ const useHitTest = create(
   )
 )
 
-export { useHitTest }
+export { useStoreHitTest }

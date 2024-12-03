@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 
-const useControls = create(
+const useStoreControls = create(
   subscribeWithSelector(
     set => ({
       controller_x: 0,
@@ -14,4 +14,4 @@ const useControls = create(
   )
 )
 
-export { useControls }
+export { useStoreControls }

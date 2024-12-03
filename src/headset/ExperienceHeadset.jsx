@@ -7,10 +7,9 @@ import { Lights } from '../Lights.jsx'
 import { Level } from '../Level.jsx'
 import { InterfaceHeadset } from './InterfaceHeadset.jsx'
 import { PlayerHeadset } from './PlayerHeadset.jsx'
-import { GAME_STATES, useGame } from '../stores/useGame.js'
+import { HitTestConfigHeadset, HitTestHeadset } from './HitTestHeadset.jsx'
+import { GAME_STATES, useStoreGame } from '../stores/useStoreGame.js'
 import { XR_MODE } from '../common/Constants.js'
-import { HitTestConfigHeadset } from '../common/HitTest.js'
-import { HitTestHeadset } from './HitTestHeadset.jsx'
 
 const XR_SCALE = {
   VR: 2.0,
@@ -43,8 +42,8 @@ const ExperienceHeadset = () => {
     xr_mode = xr_store.getState()?.mode
 
   const
-    block_count = useGame(state => state.block_count),
-    block_seed = useGame(state => state.block_seed)
+    block_count = useStoreGame(state => state.block_count),
+    block_seed = useStoreGame(state => state.block_seed)
 
   const handlerHitTest = result => {
     setBoardPosition(result)
@@ -59,33 +58,27 @@ const ExperienceHeadset = () => {
     if (xr_visibility) {
       if (xr_mode === XR_MODE.AR) {
         xr_store.setController(HitTestConfigHeadset)
-        xr_store.setHand(HitTestConfigHeadset)
-
-        useGame.setState({ phase: GAME_STATES.HIT_TEST })
+        useStoreGame.setState({ phase: GAME_STATES.HIT_TEST })
 
         if (refs.game_board.current) {
           refs.game_board.current.visible = false
         }
       }
-
-      if (refs.hud.current) {
-        refs.hud.current.visible = true
-      }
     }
 
     // NON-XR MODE
     else {
+      // STOPS HIT-TESTING
       xr_store.setController()
-      xr_store.setHand()
 
       if (camera_restore) {
         camera.copy(camera_restore)
       }
 
-      const game_phase = useGame.getState().phase
+      const game_phase = useStoreGame.getState().phase
 
       if (game_phase === GAME_STATES.HIT_TEST) {
-        useGame.setState({ phase: GAME_STATES.READY })
+        useStoreGame.setState({ phase: GAME_STATES.READY })
       }
 
       setBoardPosition(BOARD.POSITION_DEFAULT)
@@ -93,10 +86,6 @@ const ExperienceHeadset = () => {
 
       if (refs.game_board.current) {
         refs.game_board.current.visible = true
-      }
-
-      if (refs.hud.current) {
-        refs.hud.current.visible = false
       }
     }
   }, [xr_visibility])
@@ -113,7 +102,7 @@ const ExperienceHeadset = () => {
   return <>
     <color
       attach="background"
-      args={['#bdedfc']}
+      args={[0xbdedfc]}
     />
 
     <XROrigin
@@ -131,9 +120,7 @@ const ExperienceHeadset = () => {
 
     <InterfaceHeadset
       inner_ref={refs.hud}
-      xr_mode={xr_mode}
       position={[0, 0, -0.5]}
-      visible={false}
     />
 
     <group

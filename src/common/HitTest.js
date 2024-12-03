@@ -1,7 +1,6 @@
 import * as THREE from 'three'
-import { useXRInputSourceStateContext, XRHitTest } from '@react-three/xr'
 
-import { useHitTest } from '../stores/useHitTest'
+import { useStoreHitTest } from '../stores/useStoreHitTest'
 
 const HANDEDNESS = {
   LEFT: 'left',
@@ -18,12 +17,12 @@ function onResults(handedness, results, getWorldMatrix) {
 
     // LEFT
     if (handedness === HANDEDNESS.LEFT) {
-      useHitTest.setState({ hit_test_left: helper_mat4.clone() })
+      useStoreHitTest.setState({ hit_test_left: helper_mat4.clone() })
     }
 
     // RIGHT || SCREEN
     else {
-      useHitTest.setState({ hit_test_right: helper_mat4.clone() })
+      useStoreHitTest.setState({ hit_test_right: helper_mat4.clone() })
     }
   }
 }
@@ -48,14 +47,4 @@ const validateSurface = ref_reticle => {
   return null
 }
 
-// CONTINUOUS HIT-TEST CONFIG (HEADSET)
-const HitTestConfigHeadset = () => {
-  const state = useXRInputSourceStateContext()
-
-  return <XRHitTest
-    space={state.inputSource.targetRaySpace}
-    onResults={onResults.bind(null, state.inputSource.handedness)}
-  />
-}
-
-export { HANDEDNESS, onResults, validateSurface, HitTestConfigHeadset }
+export { HANDEDNESS, onResults, validateSurface }

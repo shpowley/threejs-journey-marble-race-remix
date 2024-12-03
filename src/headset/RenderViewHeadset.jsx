@@ -2,12 +2,14 @@ import { Canvas } from '@react-three/fiber'
 import { XR, createXRStore } from '@react-three/xr'
 
 import { ExperienceHeadset } from './ExperienceHeadset.jsx'
+import { HandWithPointer } from './HandWithPointer.jsx'
 import { CAMERA_DEFAULTS, XR_MODE } from '../common/Constants.js'
 
 const xr_store = createXRStore({
   domOverlay: false,
-  foveation: false,
-  hitTest: true
+  hitTest: true,
+
+  hand: HandWithPointer
 })
 
 const RenderViewHeadset = () => <>

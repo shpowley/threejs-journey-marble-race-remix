@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useXRHitTest, useXRInputSourceEvent, useXRStore } from '@react-three/xr'
 
 import { HANDEDNESS, onResults, validateSurface } from '../common/HitTest'
-import { GAME_STATES, useGame } from '../stores/useGame'
+import { GAME_STATES, useStoreGame } from '../stores/useStoreGame'
 import { Reticle } from '../components/Reticle'
 
 const HitTestActive = ({ hitTestSuccess }) => {
@@ -10,7 +10,7 @@ const HitTestActive = ({ hitTestSuccess }) => {
     reticle: useRef()
   }
 
-  const phase = useGame(state => state.phase)
+  const phase = useStoreGame(state => state.phase)
   const xr_store = useXRStore()
 
   // SETS UP MOBILE DEVICE CONTINUOUS HIT-TESTING
@@ -48,7 +48,7 @@ const HitTestActive = ({ hitTestSuccess }) => {
 }
 
 const HitTestMobile = ({ hitTestSuccess }) => {
-  const phase = useGame(state => state.phase)
+  const phase = useStoreGame(state => state.phase)
 
   return phase === GAME_STATES.HIT_TEST
     ? <HitTestActive hitTestSuccess={hitTestSuccess} />

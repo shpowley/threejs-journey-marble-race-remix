@@ -8,7 +8,7 @@ const GAME_STATES = {
   HIT_TEST: 3
 }
 
-const useGame = create(
+const useStoreGame = create(
   subscribeWithSelector(
     set => ({
       start_time: 0,
@@ -59,4 +59,4 @@ const useGame = create(
   )
 )
 
-export { useGame, GAME_STATES }
+export { useStoreGame, GAME_STATES }

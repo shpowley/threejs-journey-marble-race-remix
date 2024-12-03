@@ -9,7 +9,7 @@ const reticle = {
 
   material: new THREE.MeshBasicMaterial({
     side: THREE.DoubleSide,
-    color: '#ffffff'
+    color: 0xffffff
   })
 }
 

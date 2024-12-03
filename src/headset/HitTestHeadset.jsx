@@ -1,10 +1,20 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useXRInputSourceEvent, useXRInputSourceState, useXRStore } from '@react-three/xr'
+import { useXRInputSourceEvent, useXRInputSourceState, useXRInputSourceStateContext, useXRStore, XRHitTest } from '@react-three/xr'
 
 import { Reticle } from '../components/Reticle'
-import { HANDEDNESS, validateSurface } from '../common/HitTest'
-import { GAME_STATES, useGame } from '../stores/useGame'
+import { HANDEDNESS, onResults, validateSurface } from '../common/HitTest'
+import { GAME_STATES, useStoreGame } from '../stores/useStoreGame'
+
+// CONTINUOUS HIT-TEST CONFIG (HEADSET)
+const HitTestConfigHeadset = () => {
+  const state = useXRInputSourceStateContext()
+
+  return <XRHitTest
+    space={state.inputSource.targetRaySpace}
+    onResults={onResults.bind(null, state.inputSource.handedness)}
+  />
+}
 
 const HitTestHeadset = ({ hitTestSuccess, ref_game_board }) => {
   const refs = {
@@ -12,7 +22,7 @@ const HitTestHeadset = ({ hitTestSuccess, ref_game_board }) => {
     right_reticle: useRef()
   }
 
-  const phase = useGame(state => state.phase)
+  const phase = useStoreGame(state => state.phase)
   const xr_store = useXRStore()
   const controller_right = useXRInputSourceState('controller', 'right')
 
@@ -38,6 +48,7 @@ const HitTestHeadset = ({ hitTestSuccess, ref_game_board }) => {
   )
 
   useFrame(() => {
+    // CHECK IF OBSTACLE COURSE PLACED USING WEBXR HIT-TEST (BOARD BECOMES VISIBLE)
     if (phase !== GAME_STATES.HIT_TEST || !ref_game_board || !ref_game_board.current) return
 
     const a_button = controller_right?.gamepad?.['a-button']
@@ -46,7 +57,7 @@ const HitTestHeadset = ({ hitTestSuccess, ref_game_board }) => {
       xr_store.setController()
       xr_store.setHand()
 
-      useGame.setState({ phase: GAME_STATES.READY })
+      useStoreGame.setState({ phase: GAME_STATES.READY })
     }
   })
 
@@ -58,4 +69,4 @@ const HitTestHeadset = ({ hitTestSuccess, ref_game_board }) => {
     : null
 }
 
-export { HitTestHeadset }
+export { HitTestHeadset, HitTestConfigHeadset }

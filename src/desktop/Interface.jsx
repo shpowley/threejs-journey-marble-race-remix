@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { addEffect } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 
-import { useGame, GAME_STATES } from '../stores/useGame.js'
+import { useStoreGame, GAME_STATES } from '../stores/useStoreGame.js'
 
 const Interface = () => {
   const ref_time = useRef()
@@ -10,15 +10,15 @@ const Interface = () => {
   const controls = useKeyboardControls(state => state)
 
   const
-    restartGame = useGame(state => state.restartGame),
-    phase = useGame(state => state.phase)
+    restartGame = useStoreGame(state => state.restartGame),
+    phase = useStoreGame(state => state.phase)
 
   // UPDATE GAME TIMER
   useEffect(() => {
 
     // 'addEffect' ALLOWS ADDING A CALLBACK EXECUTED EACH FRAME OUTSIDE THE <Canvas> COMPONENT
     const cleanupEffect = addEffect(() => {
-      const { phase, start_time, end_time } = useGame.getState()
+      const { phase, start_time, end_time } = useStoreGame.getState()
 
       let elapsed_time = 0
 

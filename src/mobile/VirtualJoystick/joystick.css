@@ -1,0 +1,51 @@
+#joystick_container {
+  --container-size: 206px;
+  --container-center: calc(var(--container-size) * 0.5);
+  --container-pos-portrait-y: 120px;
+  z-index: 1000;
+  position: absolute;
+  width: var(--container-size);
+  height: var(--container-size);
+  left: calc(50% - var(--container-center));
+  bottom: var(--container-pos-portrait-y);
+}
+
+@media screen and (orientation: landscape) {
+  #joystick_container {
+    --container-pos-landscape-x: 30px;
+    --container-pos-landscape-y: 40px;
+    left: var(--container-pos-landscape-x);
+    bottom: var(--container-pos-landscape-y);
+  }
+}
+
+#joystick_origin {
+  --pos: calc(var(--container-center) - 50%);
+  z-index: 0;
+  transform: translate(var(--pos), var(--pos));
+
+  opacity: 1;
+  transition: opacity 400ms ease-in-out;
+}
+
+#joystick_follow, #joystick_knob {
+  --pos: calc(-0.5 * var(--size));
+  pointer-events: none;
+  position: absolute;
+  left: var(--pos);
+  bottom: var(--pos);
+}
+
+#joystick_follow {
+  --size: 180px;
+  z-index: 1;
+
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+}
+
+#joystick_knob {
+  --size: 60px;
+  z-index: 2;
+  opacity: 0;
+}

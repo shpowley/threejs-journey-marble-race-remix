@@ -1,40 +1,65 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, useRapier } from '@react-three/rapier'
 import { useXRInputSourceState } from '@react-three/xr'
 
-import { useGame, GAME_STATES } from '../stores/useGame.js'
+import { useStoreGame, GAME_STATES } from '../stores/useStoreGame.js'
+import { useStoreWebXR, XR_CAMERA } from '../stores/useStoreWebXR.js'
+import { useStoreControls } from '../stores/useStoreControls.js'
 import { XR_MODE } from '../common/Constants.js'
-import { useWebXR, XR_CAMERA } from '../stores/useWebXR.js'
 
 const helpers = {
+  phase: null,
   vec3: new THREE.Vector3(),
+  position_player: new THREE.Vector3(),
+  position_xr_camera: new THREE.Vector3(),
+  impulse: new THREE.Vector3(),
+  torque: new THREE.Vector3(),
+  impulse_strength: 0,
+  torque_strength: 0,
+  input_pressed: false,
+  jump_pressed: false,
   is_jumping: false,
-  phase: null
+
+  controller: {
+    x: 0,
+    y: 0
+  }
 }
 
 const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
   const ref_player = useRef()
 
-  const [smoothed_camera_position] = useState(() => new THREE.Vector3(10, 10, 10))
-  const [smoothed_camera_target] = useState(() => new THREE.Vector3())
+  const
+    [smoothed_camera_position] = useState(new THREE.Vector3(10, 10, 10)),
+    [smoothed_camera_target] = useState(new THREE.Vector3())
+
+  const hands = {
+    right: useXRInputSourceState('hand', 'right'),
+    left: useXRInputSourceState('hand', 'left')
+  }
+
+  const controllers = {
+    left: useXRInputSourceState('controller', 'left'),
+    right: useXRInputSourceState('controller', 'right')
+  }
 
   const
-    controller_right = useXRInputSourceState('controller', 'right'),
-    controller_left = useXRInputSourceState('controller', 'left')
+    thumbstick_left = controllers.left?.gamepad?.['xr-standard-thumbstick'],
+    a_button = controllers.right?.gamepad?.['a-button']
 
   const { rapier, world } = useRapier()
 
   const
-    startGame = useGame(state => state.startGame),
-    endGame = useGame(state => state.endGame),
-    restartGame = useGame(state => state.restartGame),
-    block_count = useGame(state => state.block_count)
+    startGame = useStoreGame(state => state.startGame),
+    endGame = useStoreGame(state => state.endGame),
+    restartGame = useStoreGame(state => state.restartGame),
+    block_count = useStoreGame(state => state.block_count)
 
-  const xr_camera_lock = useWebXR(state => state.xr_camera_lock)
+  const xr_camera_lock = useStoreWebXR(state => state.xr_camera_lock)
 
-  const jump = () => {
+  const jump = useCallback(() => {
     const origin = ref_player.current.translation()
     origin.y -= 0.31
 
@@ -42,24 +67,24 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
     const ray = new rapier.Ray(origin, direction)
     const hit = world.castRay(ray, 10, true)
 
-    if (hit && hit.timeOfImpact < 0.15) {
+    if (hit && hit.timeOfImpact < 0.05) {
       ref_player.current.applyImpulse({ x: 0, y: 0.5, z: 0 })
       helpers.is_jumping = true
 
       setTimeout(() => helpers.is_jumping = false, 200)
     }
-  }
+  }, [])
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     ref_player.current.setTranslation({ x: 0, y: 1, z: 0 })
     ref_player.current.setLinvel({ x: 0, y: 0, z: 0 })
     ref_player.current.setAngvel({ x: 0, y: 0, z: 0 })
-  }
+  }, [])
 
   useEffect(() => {
 
     // SUBSCRIBE TO GAME PHASES
-    const cleanupSubscribeGameState = useGame.subscribe(
+    const cleanupSubscribeGameState = useStoreGame.subscribe(
       state => state.phase,
 
       phase => {
@@ -83,66 +108,77 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
     }
 
     // MOVE BALL | ROLL: applyTorqueImpulse | PUSH: applyImpulse
-    const
-      thumbstick_left = controller_left?.gamepad?.['xr-standard-thumbstick'],
-      a_button = controller_right?.gamepad?.['a-button']
+    helpers.impulse.set(0, 0, 0)
+    helpers.torque.set(0, 0, 0)
+    helpers.impulse_strength = 0.6 * delta
+    helpers.torque_strength = 0.2 * delta
+    helpers.input_pressed = false
 
-    const
-      impulse = { x: 0, y: 0, z: 0 },
-      torque = { x: 0, y: 0, z: 0 },
-      impulse_strength = 0.6 * delta,
-      torque_strength = 0.2 * delta,
-      controller_x = thumbstick_left?.xAxis ?? 0,
-      controller_y = thumbstick_left?.yAxis ?? 0
-
-    let input_pressed = false
-
-    if (controller_x) {
-      impulse.x += impulse_strength * controller_x
-      torque.z -= torque_strength * controller_x
-      input_pressed = true
+    if (hands.left) {
+      helpers.controller.x = useStoreControls.getState().controller_x,
+        helpers.controller.y = useStoreControls.getState().controller_y
+    }
+    else {
+      helpers.controller.x = thumbstick_left?.xAxis ?? 0,
+        helpers.controller.y = thumbstick_left?.yAxis ?? 0
     }
 
-    if (controller_y) {
-      impulse.z = impulse_strength * controller_y
-      torque.x = torque_strength * controller_y
-      input_pressed = true
+    if (helpers.controller.x) {
+      helpers.impulse.x += helpers.impulse_strength * helpers.controller.x
+      helpers.torque.z -= helpers.torque_strength * helpers.controller.x
+      helpers.input_pressed = true
     }
 
-    if (!helpers.is_jumping && a_button?.state === 'pressed') {
-      jump()
-      input_pressed = true
+    if (helpers.controller.y) {
+      helpers.impulse.z = helpers.impulse_strength * helpers.controller.y
+      helpers.torque.x = helpers.torque_strength * helpers.controller.y
+      helpers.input_pressed = true
     }
 
-    ref_player.current.applyImpulse(impulse) // ALLOWS SLIGHT MOVEMENT WHILE IN THE AIR (NOTICEABLE IN MANY GAMES)
-    ref_player.current.applyTorqueImpulse(torque)
+    if (!helpers.is_jumping) {
+      helpers.jump_pressed = hands.right
+        ? useStoreControls.getState().jump
+        : a_button?.state === 'pressed'
+
+      if (helpers.jump_pressed) {
+        jump()
+        helpers.input_pressed = true
+      }
+    }
+
+    ref_player.current.applyImpulse(helpers.impulse) // ALLOWS SLIGHT MOVEMENT WHILE IN THE AIR (NOTICEABLE IN MANY GAMES)
+    ref_player.current.applyTorqueImpulse(helpers.torque)
 
     // CAMERA AND CAMERA TARGET
-    const position_player = ref_player.current.translation()
+    helpers.position_player.copy(ref_player.current.translation())
 
     if (xr_frame) {
 
       // IMMERSIVE VR
       if (xr_mode === XR_MODE.VR) {
 
-        // UNLOCKED XR CAMERA (USER-SELECTED MODE)
         helpers.vec3.set(
-          position_player.x,
-          position_player.y - 0.3,
-          position_player.z + 2.25
+          helpers.position_player.x,
+
+          xr_camera_lock === XR_CAMERA.UNLOCKED
+            ? helpers.position_player.y - 0.3
+            : helpers.position_player.y + 0.65,
+
+          helpers.position_player.z + 2.25
         )
 
         if (xr_camera_lock !== XR_CAMERA.UNLOCKED) {
-          const xr_camera_pos = ref_xr_origin.current.children[0].position
+          helpers.position_xr_camera.copy(ref_xr_origin.current.children[0].position)
+          helpers.position_xr_camera.y *= 2
 
           // XR CAMERA LOCK ALL AXES (USER-SELECTED MODE ..THIS IS THE DEFAULT)
           if (xr_camera_lock === XR_CAMERA.LOCK_ALL_AXES) {
-            helpers.vec3.sub(xr_camera_pos)
+            helpers.vec3.sub(helpers.position_xr_camera)
           }
 
           // XR CAMERA LOCK VERTICAL AXIS ONLY (USER-SELECTED MODE)
           else if (xr_camera_lock === XR_CAMERA.LOCK_Y_AXIS) {
-            helpers.vec3.y -= xr_camera_pos.y
+            helpers.vec3.y -= helpers.position_xr_camera.y
           }
         }
 
@@ -154,27 +190,37 @@ const PlayerHeadset = ({ ref_xr_origin, xr_mode }) => {
       // ELSE IF xr_mode = XR_MODE.AR ..DON'T USE THE CHASE-CAM AT ALL
     }
     else {
-      helpers.vec3.set(position_player.x, position_player.y + 0.65, position_player.z + 2.25)
+      helpers.vec3.set(
+        helpers.position_player.x,
+        helpers.position_player.y + 0.65,
+        helpers.position_player.z + 2.25
+      )
+
       smoothed_camera_position.lerp(helpers.vec3, 5 * delta)
       state.camera.position.copy(smoothed_camera_position)
 
-      helpers.vec3.set(position_player.x, position_player.y + 0.25, position_player.z)
+      helpers.vec3.set(
+        helpers.position_player.x,
+        helpers.position_player.y + 0.25,
+        helpers.position_player.z
+      )
+
       smoothed_camera_target.lerp(helpers.vec3, 5 * delta)
       state.camera.lookAt(smoothed_camera_target)
     }
 
     // GAME PHASE - START
-    if (helpers.phase !== GAME_STATES.PLAYING && input_pressed) {
+    if (helpers.phase !== GAME_STATES.PLAYING && helpers.input_pressed) {
       startGame()
     }
 
     // GAME PHASE - END OF THE MAZE
-    else if (position_player.z < -(block_count * 4 + 2)) {
+    else if (helpers.position_player.z < -(block_count * 4 + 2)) {
       endGame()
     }
 
     // GAME PHASE - FALLEN OFF THE MAZE OR "EXPLODED" OFF PLATFORM
-    else if (position_player.y < -4 || position_player.y > 10) {
+    else if (helpers.position_player.y < -4 || helpers.position_player.y > 10) {
       restartGame()
     }
   })

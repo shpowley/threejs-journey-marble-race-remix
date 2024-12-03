@@ -1,7 +1,7 @@
 import { useCallback, useEffect, } from 'react'
 
 import { ReticleMesh } from './ReticleMesh'
-import { useHitTest } from '../stores/useHitTest'
+import { useStoreHitTest } from '../stores/useStoreHitTest'
 import { HANDEDNESS } from '../common/HitTest'
 
 const Reticle = ({ ref_reticle, handedness, ...props }) => {
@@ -13,7 +13,7 @@ const Reticle = ({ ref_reticle, handedness, ...props }) => {
         hit_test_mat4.decompose(
           ref_reticle.current.position,
           ref_reticle.current.quaternion,
-          ref_reticle.current.scale
+          ref_reticle.current.scale // BUG WITH ANDROID <XROrigin> SCALE
         )
 
         reticle_is_valid = true
@@ -24,7 +24,7 @@ const Reticle = ({ ref_reticle, handedness, ...props }) => {
   }, [])
 
   useEffect(() => {
-    const cleanupHitTest = useHitTest.subscribe(
+    const cleanupHitTest = useStoreHitTest.subscribe(
       state => updateReticle(
         handedness === HANDEDNESS.LEFT
           ? state.hit_test_left

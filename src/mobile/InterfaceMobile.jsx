@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { addEffect } from '@react-three/fiber'
-import { Joystick } from 'react-joystick-component'
 
-import { useGame, GAME_STATES } from '../stores/useGame.js'
-import { useControls } from '../stores/useControls.js'
+import { useStoreGame, GAME_STATES } from '../stores/useStoreGame.js'
+import { useStoreControls } from '../stores/useStoreControls.js'
 import { RESOURCE, XR_MODE } from '../common/Constants.js'
+import { VirtualJoystick } from './VirtualJoystick/VirtualJoystick.jsx'
 
 const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = false, ar_play_button_visible = false }) => {
   const refs = {
@@ -13,22 +13,13 @@ const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = fals
   }
 
   const
-    restartGame = useGame(state => state.restartGame),
-    phase = useGame(state => state.phase),
+    restartGame = useStoreGame(state => state.restartGame),
+    phase = useStoreGame(state => state.phase),
     game_playing_mode = [GAME_STATES.READY, GAME_STATES.PLAYING, GAME_STATES.ENDED].includes(phase)
 
-  const
-    setPosition = useControls(state => state.setPosition),
-    setJump = useControls(state => state.setJump)
+  const setJump = useStoreControls(state => state.setJump)
 
   const
-    joystickMove = useCallback(data => {
-      setPosition(data.x, data.y)
-    }, []),
-
-    joystickStop = useCallback(() => {
-      setPosition(0, 0)
-    }, []),
 
     // NOTE: TOGGLING TRUE => FALSE IS REQUIRED TO TRIGGER ZUSTAND "JUMP" SUBSCRIPTION
     jump = useCallback(() => {
@@ -56,14 +47,14 @@ const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = fals
       ? store.getState().session.end()
       : enterAR(),
 
-    hitTestPlay = () => useGame.setState({ phase: GAME_STATES.READY })
+    hitTestPlay = () => useStoreGame.setState({ phase: GAME_STATES.READY })
 
   // UPDATE GAME TIMER
   useEffect(() => {
 
     // 'addEffect' ALLOWS ADDING A CALLBACK EXECUTED EACH FRAME OUTSIDE THE <Canvas> COMPONENT
     const cleanupEffect = addEffect(() => {
-      const { phase, start_time, end_time } = useGame.getState()
+      const { phase, start_time, end_time } = useStoreGame.getState()
 
       let elapsed_time = 0
 
@@ -104,7 +95,7 @@ const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = fals
     {/* QUICK SETTINGS */}
     <div id='quick-settings'>
       {
-        navigator?.xr.isSessionSupported(XR_MODE.AR) &&
+        navigator?.xr?.isSessionSupported(XR_MODE.AR) &&
         <div id='xr_mode'>
           <img
             src={xr_visibility ? RESOURCE.ICON_XR_EXIT : RESOURCE.ICON_XR_MODE}
@@ -150,31 +141,14 @@ const InterfaceMobile = ({ store = null, xr_visibility = null, xr_overlay = fals
       </div>
     }
 
-    {/*
-      CONTROLS: VIRTUAL JOYSTICK + JUMP
-      - e.stopPropagation() PREVENTS TOUCHING THE JOYSTICK AND TRIGGERING JUMP
-    */}
+    {/* CONTROLS: VIRTUAL JOYSTICK + JUMP */}
     {
       game_playing_mode &&
       <div
         id='touch-controls-container'
         onTouchStart={jump}
       >
-        <div
-          id='touch-joystick'
-          onTouchStart={e => e.stopPropagation()}
-        >
-          <Joystick
-            baseColor={'#00000000'}
-            stickColor={'#ececec'}
-            size={120}
-            stickSize={80}
-            throttle={100}
-
-            move={joystickMove}
-            stop={joystickStop}
-          />
-        </div>
+        <VirtualJoystick />
       </div>
     }
 

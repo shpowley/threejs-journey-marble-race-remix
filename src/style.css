@@ -162,16 +162,6 @@ body,
   z-index: 0;
 }
 
-#touch-joystick {
-  height: fit-content;
-  position: absolute;
-  bottom: 70px;
-}
-
-#touch-joystick button {
-  box-shadow: #2d234266 0 2px 4px, #2d23424d 0 7px 13px -3px, #3a3a3a8c 0 -3px 5px 2px inset;
-}
-
 /* HEADSET AR / VR BUTTONS */
 #div_buttons, #hit-test-play {
   display: flex;

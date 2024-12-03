@@ -8,14 +8,14 @@ const XR_CAMERA = {
   UNLOCKED: 2
 }
 
-const useWebXR = create(
+const useStoreWebXR = create(
   subscribeWithSelector(
     set => ({
+      xr_visibility: null, // FOR XR VISIBILITY (useXRSessionVisibilityState() FOR MOBILE DOM OVERLAY OUTSIDE <XR> TAGS)
       xr_camera_lock: XR_CAMERA.LOCK_ALL_AXES,
 
       cycleXRCameraLock: () => {
         set(state => {
-
           switch (state.xr_camera_lock) {
             case XR_CAMERA.LOCK_ALL_AXES:
               return { xr_camera_lock: XR_CAMERA.LOCK_Y_AXIS }
@@ -34,4 +34,4 @@ const useWebXR = create(
   )
 )
 
-export { useWebXR, XR_CAMERA }
+export { useStoreWebXR, XR_CAMERA }
